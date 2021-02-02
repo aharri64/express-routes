@@ -2,24 +2,26 @@ const express = require('express')
 const app = express()
 const expressLayouts = require('express-ejs-layouts')
 const fs = require('fs')
+const methodOverride = require('method-override')
 
 
 // MiddleWare
 // this will help us use our layout file
 app.use(expressLayouts)
-app.use(express.urlencoded({extended: false}));
+app.use(express.urlencoded({ extended: false }));
+app.use(methodOverride('_method'))
 
 // for views use .ejs files
 app.set('view engine', 'ejs')
 
 // ROUTES
-app.get('/', (req, res)=> {
+app.get('/', (req, res) => {
     res.send('Hi there')
 })
 
 // Index View
 // this url: localhost:8000/dinosaurs
-app.get('/dinosaurs', (req, res)=> {
+app.get('/dinosaurs', (req, res) => {
     let dinos = fs.readFileSync('./dinosaurs.json')
     // take our data and put it in a more readable format
     dinos = JSON.parse(dinos)
@@ -27,7 +29,7 @@ app.get('/dinosaurs', (req, res)=> {
     let nameToFilterBy = req.query.nameFilter
     // array method filter
     console.log(nameToFilterBy)
-    
+
     // if there is no submit of the form
     // this will be undefined, and we will returnb all dinos
     if (nameToFilterBy) {
@@ -40,17 +42,17 @@ app.get('/dinosaurs', (req, res)=> {
     }
     // console.log(dinos)
     // in our views folder render this page
-    res.render('dinosaurs/index', {dinos: dinos} )
+    res.render('dinosaurs/index', { dinos: dinos })
 })
 
 // NEW View
 // Most specific to least specific url path
-app.get('/dinosaurs/new', (req, res)=> {
+app.get('/dinosaurs/new', (req, res) => {
     res.render('dinosaurs/new')
-  })
+})
 
 // SHOW View
-app.get('/dinosaurs/:index', (req, res)=> {
+app.get('/dinosaurs/:index', (req, res) => {
     let dinos = fs.readFileSync('./dinosaurs.json')
     // take our data and put it in a more readable format
     dinos = JSON.parse(dinos)
@@ -63,7 +65,7 @@ app.get('/dinosaurs/:index', (req, res)=> {
 
 
 // POST route, doesn't have a view
-app.post('/dinosaurs', (req, res)=> {
+app.post('/dinosaurs', (req, res) => {
     let dinos = fs.readFileSync('./dinosaurs.json')
     // take our data and put it in a more readable format
     dinos = JSON.parse(dinos)
@@ -76,7 +78,7 @@ app.post('/dinosaurs', (req, res)=> {
     dinos.push(newDino)
     fs.writeFileSync('./dinosaurs.json', JSON.stringify(dinos))
 
-    let lastIndex  = dinos.length -1
+    let lastIndex = dinos.length - 1
     // get a request to /dinosaurs
     res.redirect(`/dinosaurs/${lastIndex}`)
     // this is coming from our form submit
@@ -84,8 +86,24 @@ app.post('/dinosaurs', (req, res)=> {
     // console.log(req.body)
 })
 
+app.delete('/dinbosaurs/:idx', (req, res) => {
+    const dinosaurs = fs.readFileSync('./dinosaurs.json')
+    const dinosaursArray = JSON.parse(dinosaurs)
+
+    //intermediate variable
+    let idx = Number(req.params.idx); //what is this datatype? Comes in as a string, changes to integer. change by adding Number() to beginning
+
+    //remove the dinosaur
+    dinosaursArray.splice(idx, 1);
+
+    //save the dinosaurs array into the dinosaurs.json file
+    fs.writeFileSync('./dinosaurs.json', JSON.stringify(dinosaursArray))
+
+    //redirect back to /dinosaurs route
+    res.redirect('/dinosaurs')
+})
 
 const PORT = process.env.PORT || 8000
-app.listen(PORT, ()=> {
+app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`)
 })
